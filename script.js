@@ -4,8 +4,8 @@ let ctx1 = canvas_first.getContext("2d")
 let ctx2 = canvas_second.getContext("2d")
 let image_first = new Image()
 let image_second = new Image()
-let lineStartCoords
-let lineFinishCoords
+let lineStartPoint
+let lineFinishPoint
 let scale
 let dist1
 let dist2
@@ -70,9 +70,9 @@ function clearCanvas(id)
 		draw_grid(id)
 	}
 
-	lines.forEach((item)=>
+	lines.forEach((line)=>
 	{
-		draw_line(item.canvas_id, item.x1, item.y1, item.x2, item.y2, "white")
+		draw_line(line, "white")
 	})
 }
 
@@ -85,41 +85,39 @@ function remLast(id)
 	clearCanvas(id)
 }
 
-function distance(x1, y1, x2, y2)
-{
-	return Math.sqrt( Math.pow(Math.abs(x1-x2), 2) + Math.pow(Math.abs(y1-y2),2) )
-}
 
-function draw_node(id, x, y, color)
+function draw_node(node, color)
 {
 	let ctx
 
-	if (id == "canvas_first")
+	if (node.id == "canvas_first")
 		ctx = ctx1
 	else
 		ctx = ctx2
-	ctx.strokeStyle = color
 
 	ctx.beginPath();
-    ctx.arc(x, y, 5, 0, 2 * Math.PI, false);
-    ctx.fillStyle = 'green';
-    ctx.fill();
-    ctx.stroke();
+  ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+  ctx.fillStyle = color;
+  ctx.fill();
 
 }
 
-function draw_line(id, start_x, start_y, finish_x, finish_y, color)
+function draw_line(line, color)
 {
 
 	let ctx
-	if (id == "canvas_first")
+	if (line.id == "canvas_first")
+	{
 		ctx = ctx1
+	}
 	else
+	{
 		ctx = ctx2
+	}
 	ctx.strokeStyle = color
 	ctx.beginPath();
-	ctx.moveTo(start_x, start_y);
-	ctx.lineTo(finish_x, finish_y);
+	ctx.moveTo(line.x1, line.y1);
+	ctx.lineTo(line.x2, line.y2);
 	ctx.stroke();
 
 
@@ -197,8 +195,16 @@ function(element, index)
     element.addEventListener("mousedown",
 	function(e)
 	{
+		if (mode == null)
+			return
+
 		let lines
 		let id = e.target.id
+
+		let rect = e.target.getBoundingClientRect();
+		let x = e.clientX - rect.left; //x position within the element.
+		let y = e.clientY - rect.top;  //y position within the element.
+
 		if (e.target.id == "canvas_first")
 		{
 			lines = lines1
@@ -212,29 +218,23 @@ function(element, index)
 		if (mode.move_node && node_aimed != null && line_aimed != null)
 		// moving existing line
 		{
-			console.log("rem line", line_aimed)
 			// remove line
 
-			// removing WRONG line!!
 			let index = lines.indexOf(line_aimed);
 			if (index !== -1) lines.splice(index, 1);
-			lineFinishCoords = null
+			lineFinishPoint = null
+
 			// static start coordinates
 			if (line_aimed.x1 != node_aimed.x && line_aimed.y1 != node_aimed.x)
-					lineStartCoords = {"id": id, "x": line_aimed.x1, "y":line_aimed.y1}
+					lineStartPoint = new Point(id, line_aimed.x1, line_aimed.y1)
 			else
-					lineStartCoords = {"id": id, "x": line_aimed.x2, "y":line_aimed.y2}
-
-
+					lineStartPoint = new Point(id, line_aimed.x2, line_aimed.y2)
 		}
 		else if (!mode.move_node)
 		// creating new line
 		{
-			let rect = e.target.getBoundingClientRect();
-			let x = e.clientX - rect.left; //x position within the element.
-			let y = e.clientY - rect.top;  //y position within the element.
-			lineFinishCoords = null
-			lineStartCoords = {"id":id, "x": x, "y": y}
+			lineFinishPoint = null
+			lineStartPoint = new Point(id, x, y)
 		}
 
    });
@@ -246,84 +246,88 @@ canvases.forEach(
 	element.addEventListener("mouseup",
   (e)=>
 	{
-		 let lines
-	   let id = e.target.id
-		 let dist_canvas1
-		 let dist_canvas2
+		if (mode == null)
+			return
 
-		 if (id == "canvas_first")
-		 {
+		let lines
+	  let id = e.target.id
+		let dist_canvas1
+		let dist_canvas2
+
+		let rect = e.target.getBoundingClientRect();
+ 		let x = e.clientX - rect.left;
+ 		let y = e.clientY - rect.top;
+
+		let line_done = new Line(id, x, y, lineStartPoint.x, lineStartPoint.y)
+
+		clearCanvas(id)
+
+		if (id == "canvas_first")
+		{
 			 dist = dist_canvas1
 			 lines = lines1
-		 }
-
+		}
 		else
 		{
 			lines = lines2
+			// probably wont work
 			dist = dist_canvas2
 		}
 
+	  if (lineStartPoint.id != e.target.id)
+		// if line was started on different canvas it will be canceled
+		// also deletes line that is getting moved from both canvas and reg
+	  {
+		  lineStartPoint=null
+		  return
+	  }
 
 
-	   if (lineStartCoords.id != e.target.id)
-		 // if line was started on different canvas it will be canceled
-		 // also deletes line that is getting moved from both canvas and reg
-	   {
-		   lineStartCoords=null
-		   return
-	   }
-
-    clearCanvas(id)
-		let rect = e.target.getBoundingClientRect();
-		let x = e.clientX - rect.left;
-		let y = e.clientY - rect.top;
 
 
 		if (mode.draw_line)
 		{
-			draw_line(id, x, y, lineStartCoords.x, lineStartCoords.y, mode.color)
+			draw_line(line_done, mode.color)
 		}
 
 		if(mode.dist_scale)
 		{
+			dist = distance(line_done)
 
-			dist = distance(x, y, lineStartCoords.x, lineStartCoords.y)
-			console.log("dist", dist)
-
-			if (dist1 && dist2)
+			if (dist_canvas1 && dist_canvas2)
 			{
-				scale = dist1/dist2
+				scale = dist_canvas1/dist_canvas2
 				console.log("scale", scale)
-				dist1 = null
-				dist2 = null
+				dist_canvas1 = null
+				dist_canvas2 = null
 			}
 		}
 
 		if (mode.output_distance)
 		{
-
 			if (e.target.id == "canvas_first")
-				console.log("DISTANCE:", distance(x, y, lineStartCoords.x, lineStartCoords.y)/scale)
+				console.log("DISTANCE:", distance(line_done)/scale)
 			else
-				console.log("DISTANCE:", distance(x, y, lineStartCoords.x, lineStartCoords.y))
+				console.log("DISTANCE:", distance(line_done))
 		}
 
 		if (mode.outputs_angle)
 		{
 
 			let lines_to_get_angle_between = []
-			for (let line of lines)
+			for (let saved_line of lines)
 			{
-				// get line 1 from lines
-				// get line 2 from lines
+				// saved line is axis from registry
+				// get saved_line 1 from lines
+				// get saved_line 2 from lines
 
-				let collision = line_cross_coordinates(x, y, lineStartCoords.x, lineStartCoords.y, line.x1, line.y1, line.x2, line.y2)
-				console.log("COLLISION", collision)
+				let collisionPoint = line_cross_coordinates(saved_line, line_done)
+				console.log("COLLISION", collisionPoint)
 				// if sections collided not only lines
 				// BUG: first two line instances always satisfy all checks
-				if (collision && dot_on_section(collision.x, collision.y, x, y, lineStartCoords.x, lineStartCoords.y))
+				if (collisionPoint && dot_on_section(collisionPoint, line_done))
 				{
-						lines_to_get_angle_between.push(line)
+						lines_to_get_angle_between.push(line_done)
 						if (lines_to_get_angle_between.length == 2)
 							break;
 				}
@@ -332,9 +336,9 @@ canvases.forEach(
 			let angle = getAngleBetweenLines(lines_to_get_angle_between[0], lines_to_get_angle_between[1])
 
 			// output angle
-			let rel_out_coords = get_sestion_middle_coords_rel(lineStartCoords.x, lineStartCoords.y, x, y)
-			let output_box_x = lineStartCoords.x + rect.left
-			let output_box_y = lineStartCoords.y + rect.top
+			let out_coords = get_sestion_middle_coords(line_done)
+			let output_box_x = out_coords.x + rect.left
+			let output_box_y = out_coords.y + rect.top
 
 			let output_element = document.createElement("div")
 
@@ -351,13 +355,12 @@ canvases.forEach(
 
 		if (mode.save_line)
 		{
-			line = new Line(id, lineStartCoords.x, lineStartCoords.y, x, y)
-			lines.push(line)
+			lines.push(line_done)
 		}
 
 		line_aimed = null
 		node_aimed = null
-		lineStartCoords = null
+		lineStartPoint = null
 
 		// clear AND REDRAW all lines on canvas
 		clearCanvas(id)
@@ -369,6 +372,8 @@ canvases.forEach((canvas)=>
 {
 	canvas.addEventListener("mousemove", (e)=>
 	{
+		if (mode == null)
+			return
 
 		let id = e.target.id
 		let lines
@@ -378,22 +383,32 @@ canvases.forEach((canvas)=>
 		let x = e.clientX - rect.left;
 		let y = e.clientY - rect.top;
 
+
+		let line_temp
+
 		if (id == "canvas_first")
+		{
 			lines = lines1
+		}
+
 		else
+		{
 			lines = lines2
+		}
+
 
 		clearCanvas(id)
 
-		if (mode.intermediate_line && lineStartCoords)
+		if (mode.intermediate_line && lineStartPoint)
 		// drawing  intermediate line
 		{
-			if (lineStartCoords.id != e.target.id)
+			line_temp = new Line(e.target.id, lineStartPoint.x, lineStartPoint.y, x, y)
+			if (lineStartPoint.id != e.target.id)
 				return
 
 
 
-			draw_line(e.target.id, lineStartCoords.x, lineStartCoords.y, x, y, "gray")
+			draw_line(line_temp, "gray")
 		}
 
 		else
@@ -412,29 +427,19 @@ canvases.forEach((canvas)=>
 						let node_x
 						let node_y
 
-						let node_start_x
-						let node_start_y
-
 						if(Math.abs(line.x2 - x) < 10 && Math.abs(line.y2 - y) < 10)
 						{
 							node_x = line.x2
 							node_y = line.y2
-
-							node_start_x = line.x1
-							node_start_y = line.y1
 						}
 						else
 						{
 							// not aimed at any node
 							node_x = line.x1
 							node_y = line.y1
-
-							node_start_x = line.x2
-							node_start_y = line.y2
 						}
-
-						draw_node(id, node_x, node_y, "red")
-						node_aimed = {"id": id, "x": node_x, "y": node_y}
+						node_aimed = new Point(id, node_x, node_y)
+						draw_node(node_aimed, "red")
 						line_aimed = line
 						break
 
@@ -449,12 +454,3 @@ canvases.forEach((canvas)=>
 		}
 	})
 })
-
-document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-		let rect = e.target.getBoundingClientRect();
-		let x = e.clientX - rect.left;
-		let y = e.clientY - rect.top;
-    console.log(x, y)
-    return false;
-}, false);
