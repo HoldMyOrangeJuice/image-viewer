@@ -1,0 +1,33 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>testing</title>
+
+  <link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body id="body">
+  <button onclick="setMode('dist_scale')">dist1</button>
+  <button onclick="setMode('dist')">dist</button>
+  <button onclick="setMode('draw')">add axis</button>
+  <button onclick="setMode('node_move')">move nodes</button>
+  <button onclick="setMode('get_angle')">get angle</button>
+
+  <button onclick="remLast('canvas_first')">remove last c1</button>
+  <button onclick="remLast('canvas_second')">remove last c2</button>
+  <canvas id="canvas_first" ></canvas>
+
+  <canvas id="canvas_second" ></canvas>
+
+   <script src="line_class.js"></script>
+   <script src="utils.js"></script>
+   <script src="Mode.js"></script>
+   <script src="script.js"></script>
+
+</body>
+</html>
