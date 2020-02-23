@@ -18,17 +18,17 @@ let canvases = [ canvas_first, canvas_second ]
 let mode
 let node_aimed = null
 let line_aimed = null
-let nodes_temp = {}
+//let nodes_temp = {}
 
 let dist_canvas1
 let dist_canvas2
-// mode instance                intermdt line |save start coords |color    |draw line |save line |scaling |move node |out dist |has move evt |out angle | creates moveable lines
-let GET_DISTANCE_MODE = new Mode(true,         true,              "green",  true,      false,     false,   false,     true,     false,        false,     false)
-let GET_ANGLE_MODE = new Mode(true,            true, 						  "white",  true,      false,     false ,  false,     false,    false,        true,      false)
-let DRAW_ADDITIONAL_AXIS_MODE = new Mode(true, true, 							"red",    true,      true,      false,   false,     false,    false,        false,     true)
-let MOVE_NODE_MODE = new Mode(true,            true, 							"gray",   true,      true,      false,   true,      false,    true,         false,     false)
-let SCALING_DISTANCE_MODE = new Mode(true,     true, 							"white",  true,      false,     true,    false,     false,    false, 				false,     false)
-let DRAW_LINE_WITH_DIST = new Mode(true,       true,              "brown",  true,      true,      false,   false,     true,     false,        false,     false)
+// mode instance                intermdt line |save start coords |color    |draw line |save line |scaling |move node |out dist |has move evt |out angle | creates moveable lines |show nodes |show_label
+let GET_DISTANCE_MODE = new Mode(true,         true,              "green",  true,      false,     false,   false,     true,     false,        false,     false,                   true,       true)
+let GET_ANGLE_MODE = new Mode(true,            true, 						  "white",  true,      false,     false ,  false,     false,    false,        true,      false,                   false,      false)
+let DRAW_ADDITIONAL_AXIS_MODE = new Mode(true, true, 							"red",    true,      true,      false,   false,     false,    false,        false,     true,                    true,       true)
+let MOVE_NODE_MODE = new Mode(true,            true, 							"gray",   true,      true,      false,   true,      false,    true,         false,     false,                   false, 			false)
+let SCALING_DISTANCE_MODE = new Mode(true,     true, 							"white",  true,      false,     true,    false,     false,    false, 				false,     false,                   false, 			false)
+let DRAW_LINE_WITH_DIST = new Mode(true,       true,              "brown",  true,      true,      false,   false,     true,     false,        false,     false,                   true, 			true)
 
 
 image_first.src = "1.png"//"https://images.unsplash.com/photo-1523895665936-7bfe172b757d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80"
@@ -54,8 +54,38 @@ function output(string)
 		text_output.innerText = (string)
 }
 
-function clearCanvas(id)
+function clear_canvas(id)
 {
+	console.log("clear canvs")
+	let ctx
+	let canvas
+	let image
+	let lines
+	let nodes
+	if (id =="canvas_first")
+	{
+		lines = lines1
+		ctx = ctx1
+		canvas = canvas_first
+		image = image_first
+		nodes = nodes1
+	}
+
+	else
+	{
+		lines = lines2
+		ctx = ctx2
+		canvas = canvas_second
+		image = image_second
+		nodes = nodes1
+	}
+	ctx.clearRect(0, 0, canvas.width, canvas.height)
+	ctx.drawImage(image, 0, 0);
+	//redraw_canvas(id)
+}
+function redraw_canvas(id)
+{
+	console.log("redraw")
 	let ctx
 	let canvas
 	let image
@@ -79,8 +109,6 @@ function clearCanvas(id)
 		nodes = nodes1
 	}
 
-	ctx.clearRect(0, 0, canvas.width, canvas.height)
-	ctx.drawImage(image, 0, 0);
 
 	if (scale)
 	{
@@ -91,6 +119,18 @@ function clearCanvas(id)
 	lines.forEach((line)=>
 	{
 		draw_line(line, "white")
+		console.log(line)
+		if (line.show_label)
+		{
+			line.remove_label()
+			line.add_label()
+		}
+
+		if (line.show_nodes)
+		{
+			line.draw_nodes()
+		}
+
 	})
 
 	nodes.forEach((node)=>
@@ -98,13 +138,13 @@ function clearCanvas(id)
 		draw_node(node, "red")
 	})
 
-	if (nodes_temp[id])
-	{
-		nodes_temp[id].forEach((node)=>
-		{
-			draw_node(node, "red")
-		})
-	}
+	// if (nodes_temp[id])
+	// {
+	// 	nodes_temp[id].forEach((node)=>
+	// 	{
+	// 		draw_node(node, "red")
+	// 	})
+	// }
 
 }
 
@@ -114,7 +154,8 @@ function remLast(id)
 		lines1.pop()
 	else
 		lines2.pop()
-	clearCanvas(id)
+	//redraw_canvas(id)
+	clear_canvas(id)
 }
 
 
@@ -289,7 +330,11 @@ function(element, index)
 		{
 			// remove line
 			let index = lines.indexOf(line_aimed);
-			if (index !== -1) lines.splice(index, 1);
+			if (index !== -1)
+			{
+				line_aimed.remove_label()
+				lines.splice(index, 1);
+			}
 			lineFinishPoint = null
 
 			// static start coordinates
@@ -314,8 +359,12 @@ canvases.forEach(
 	element.addEventListener("mouseup",
   (e)=>
 	{
+
+
 		if (mode == null)
 			return
+
+
 
 		let lines
 	  let id = e.target.id
@@ -323,9 +372,17 @@ canvases.forEach(
 		let rect = e.target.getBoundingClientRect();
  		let x = e.clientX - rect.left;
  		let y = e.clientY - rect.top;
-		let line_done = new Line(id, x, y, lineStartPoint.x, lineStartPoint.y, mode.creates_moveable_lines)
+		console.log(mode)
+		//redraw_canvas(id)
+		clear_canvas(id)
 
-		clearCanvas(id)
+		// creating line here
+		let line_done = new Line(id, x, y, lineStartPoint.x, lineStartPoint.y,
+														  mode.creates_moveable_lines,
+														  mode.show_created_line_nodes,
+															mode.show_label,)
+
+		//redraw_canvas(id)
 
 		if (id == "canvas_first")
 		{
@@ -347,11 +404,9 @@ canvases.forEach(
 		  return
 	  }
 
-
-
-
 		if (mode.draw_line)
 		{
+
 			draw_line(line_done, mode.color)
 		}
 
@@ -388,9 +443,13 @@ canvases.forEach(
 				console.log("DISTANCE:", line_done.length()/scale)
 				output(dist)
 				remove_label("label_dist", id)
-				nodes_temp[id] = [new Point(line_done.id, line_done.x1, line_done.y1), new Point(line_done.id, line_done.x2, line_done.y2)]
-				place_label(get_sestion_middle_coords(nodes_temp[id][0], nodes_temp[id][1]), dist, "label_dist", "white", "black")
 
+				draw_node(new Point(line_done.id, line_done.x1, line_done.y1))
+				draw_node(new Point(line_done.id, line_done.x2, line_done.y2))
+				//nodes_temp[id] = [new Point(line_done.id, line_done.x1, line_done.y1), new Point(line_done.id, line_done.x2, line_done.y2)]
+				//place_label(get_sestion_middle_coords(nodes_temp[id][0], nodes_temp[id][1]), dist, "label_dist", "white", "black")
+
+				//line_done.add_label()
 		}
 
 		if (mode.outputs_angle)
@@ -425,8 +484,10 @@ canvases.forEach(
 			let dot1 = line_cross_coordinates(line_done, lines_to_get_angle_between[0])
 			let dot2 = line_cross_coordinates(line_done, lines_to_get_angle_between[1])
 
-			nodes_temp[id] = [dot1, dot2, line_cross_coordinates(lines_to_get_angle_between[0], lines_to_get_angle_between[1])]
-
+			//nodes_temp[id] = [dot1, dot2, line_cross_coordinates(lines_to_get_angle_between[0], lines_to_get_angle_between[1])]
+			draw_node(dot1)
+			draw_node(dot2)
+			draw_node(line_cross_coordinates(lines_to_get_angle_between[0], lines_to_get_angle_between[1]))
 			let angle_mode
 			if ( angle_is_smaller(dot1, dot2, lines_to_get_angle_between[0], lines_to_get_angle_between[1]) )
 			{
@@ -473,13 +534,15 @@ canvases.forEach(
 		{
 			lines.push(line_done)
 		}
+		// draw everything with new line
+		redraw_canvas(id)
 
 		line_aimed = null
 		node_aimed = null
 		lineStartPoint = null
 
 		// clear AND REDRAW all lines on canvas
-		//clearCanvas(id)
+		//redraw_canvas(id)
    });
 });
 
@@ -513,18 +576,20 @@ canvases.forEach((canvas)=>
 		}
 
 
-		clearCanvas(id)
-
 		if (mode.intermediate_line && lineStartPoint)
 		// drawing  intermediate line
 		{
 			line_temp = new Line(e.target.id, lineStartPoint.x, lineStartPoint.y, x, y)
+			//redraw_canvas(id)
+
 			if (lineStartPoint.id != e.target.id)
 				return
 
-
-
+			clear_canvas(id)
+			redraw_canvas(id)
 			draw_line(line_temp, "gray")
+
+
 		}
 
 		else
@@ -534,6 +599,9 @@ canvases.forEach((canvas)=>
 				// pass event only if need to highlite nodes
 				return
 
+			//	redraw_canvas(id)
+				clear_canvas(id)
+				redraw_canvas(id)
 			if (mode.move_node)
 			{
 				for (let line of lines)
