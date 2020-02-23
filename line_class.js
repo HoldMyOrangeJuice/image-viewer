@@ -1,12 +1,13 @@
 class Line
 {
-	constructor(id, x1, y1, x2, y2)
+	constructor(id, x1, y1, x2, y2, moveable)
 	{
 		this.x1 = x1
 		this.x2 = x2
 		this.y1 = y1
 		this.y2 = y2
 		this.id = id // canvas id
+		this.moveable = (moveable==null||moveable==undefined)?false:true
 	}
 
 	length()
@@ -25,5 +26,9 @@ class Point
 		this.id = id
 		this.x = x
 		this.y = y
+	}
+	distance(point)
+	{
+		return Math.sqrt( Math.pow(Math.abs(this.x - point.x), 2) + Math.pow(Math.abs(this.y-point.y),2) )
 	}
 }
