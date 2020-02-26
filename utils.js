@@ -1,5 +1,6 @@
 function getAngleBetweenLines(line1, line2, angle_mode)
 {
+  
   let start_x1 = line1.x1
   let finish_x1 = line1.x2
   let start_y1 = line1.y1

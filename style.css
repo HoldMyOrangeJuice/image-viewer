@@ -1,0 +1,24 @@
+#cont {
+  position: relative;
+}
+#bg1, #canvas_first, #bg2, #canvas_second, #grid_first, #grid_second, #temp_line_first, #temp_line_second {
+  position: absolute;
+}
+#canvas_first, #canvas_second {
+  z-index: 10;
+}
+
+.flex
+{
+  display: flex;
+}
+
+#grid_first, #grid_second
+{
+  z-index: 5;
+}
+
+#temp_line_first, #temp_line_second
+{
+  z-index: 2;
+}

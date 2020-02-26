@@ -13,25 +13,51 @@
 
 <body id="body">
   <div id="text-output"></div>
+  <div>
+    <button onclick="setMode('dist_scale')">dist scale</button>
+    <button onclick="setMode('tilt')">get_head_tilt_angle</button>
+    <button onclick="setMode('dist')">dist</button>
+    <button onclick="setMode('draw')">add axis</button>
+    <button onclick="setMode('node_move')">move nodes</button>
+    <button onclick="setMode('get_angle')">get angle</button>
+    <button onclick="setMode('draw_axis_with_dist')">dist line</button>
+    <button onclick="setMode('curve')">curve</button>
+    <button onclick="draw_curve_shape('shape_1')">draw shepe</button>
 
-  <button onclick="setMode('dist_scale')">dist scale</button>
-  <button onclick="setMode('dist')">dist</button>
-  <button onclick="setMode('draw')">add axis</button>
-  <button onclick="setMode('node_move')">move nodes</button>
-  <button onclick="setMode('get_angle')">get angle</button>
-  <button onclick="setMode('draw_axis_with_dist')">dist line</button>
+    <button onclick="remLast('canvas_first')">remove last c1</button>
+    <button onclick="remLast('canvas_second')">remove last c2</button>
+  </div>
 
-  <button onclick="remLast('canvas_first')">remove last c1</button>
-  <button onclick="remLast('canvas_second')">remove last c2</button>
+  <div class="flex">
 
-  <canvas id="canvas_first" ></canvas>
+    <div  class="cont">
+      <div id="bg1"></div>
+      <canvas id="grid_first" ></canvas>
+      <canvas id="temp_line_first"></canvas>
+      <canvas id="canvas_first" ></canvas>
 
-  <canvas id="canvas_second" ></canvas>
+    </div>
+
+    <div  class="cont">
+      <div id="bg2"></div>
+      <canvas id="grid_second" ></canvas>
+      <canvas id="temp_line_second"></canvas>
+      <canvas id="canvas_second" ></canvas>
+
+    </div>
+
+  </div>
+
+
+
+
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
    <script src="line_class.js"></script>
+   <script src="CanvasData.js"></script>
    <script src="utils.js"></script>
    <script src="Mode.js"></script>
+   <script src="ComplexObject.js"></script>
    <script src="script.js"></script>
 
 </body>

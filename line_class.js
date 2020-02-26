@@ -19,7 +19,7 @@ class Line
 
 	length()
 	{
-		return Math.sqrt( Math.pow(Math.abs(this.x2 - this.x1), 2) + Math.pow(Math.abs(this.y2-this.x1),2) )
+		return Math.sqrt( Math.pow(this.x2 - this.x1, 2) + Math.pow(this.y2-this.y1,2) )
 	}
 
 
@@ -38,7 +38,7 @@ class Line
 	{
 		let pos = get_sestion_middle_coords(this.point1, this.point2)
 		//console.log("creating label! existing label", this.label, "should be deleted!");
-		place_label(pos, this.length(), this.label_class, "white", "black")
+		return place_label(pos, this.id=="canvas_first"?this.length()/scale:this.length(), this.label_class, "white", "black")
 		//console.log("create new label", this.label)
 	}
 
